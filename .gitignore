@@ -1,0 +1,21 @@
+# The boundary: if git tracks it, it belongs to the system; if git ignores it,
+# it's yours. `npm run update` checks out tracked files only, so everything
+# below survives every update untouched.
+
+# Your mail config (hosts, usernames, secret lookup commands — never passwords)
+config/himalaya.toml
+
+# Your profile: account purposes, VIPs, cleanup rules, draft voice
+modes/_profile.md
+
+# Everything email-ops writes: digests, proposals, drafts, the actions log
+/data/
+
+# Claude Code per-user settings
+.claude/settings.local.json
+
+# Never commit raw mail or secrets
+*.eml
+.env
+
+node_modules/

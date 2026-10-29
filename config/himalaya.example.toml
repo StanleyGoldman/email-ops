@@ -1,0 +1,44 @@
+# email-ops himalaya config. Copy to config/himalaya.toml (gitignored) and fill in.
+#
+# - No passwords here: each one is looked up from the GNOME keyring at connect
+#   time. Store them once with:
+#     secret-tool store --label="email-ops personal" service email-ops account personal
+# - No smtp or sieve blocks: email-ops never sends (and the IMAP-only build
+#   could not anyway).
+# - Never use `password.raw`; `node doctor.mjs` fails on it.
+#
+# Reference: ~/.cargo/registry/src/*/himalaya-2.2.1/config.sample.toml
+
+# Newest-first listings read better with local times.
+envelope.list.datetime-local-tz = true
+
+[accounts.personal]
+default = true
+email = "me@example.org"          # fills From on drafted replies
+display-name = "Your Name"
+
+imap.server = "mail.example.org"  # implicit TLS on 993; use "imap://host:143" + imap.starttls = true for STARTTLS
+imap.sasl.plain.username = "me@example.org"
+imap.sasl.plain.password.command = ["secret-tool", "lookup", "service", "email-ops", "account", "personal"]
+
+# Plain IMAP reports only the inbox role, so name the other folders. Find the
+# real names with: himalaya -c config/himalaya.toml -a personal mailbox list
+mailbox.alias.archive = "Archive"
+mailbox.alias.trash = "Trash"
+mailbox.alias.drafts = "Drafts"
+mailbox.alias.sent = "Sent"
+mailbox.alias.junk = "Junk"
+
+[accounts.work]
+email = "me@work.example"
+display-name = "Your Name"
+
+imap.server = "imap.work.example"
+imap.sasl.plain.username = "me@work.example"
+imap.sasl.plain.password.command = ["secret-tool", "lookup", "service", "email-ops", "account", "work"]
+
+mailbox.alias.archive = "Archive"
+mailbox.alias.trash = "Trash"
+mailbox.alias.drafts = "Drafts"
+mailbox.alias.sent = "Sent"
+mailbox.alias.junk = "Junk"
