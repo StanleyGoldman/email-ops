@@ -32,6 +32,8 @@ An email assistant run from Claude Code over the user's IMAP accounts. The promp
 
 Updates never touch these. Don't move user data into tracked files, and don't add tracked files that hold personal data.
 
+Claude Code itself writes into the tracked `.claude/settings.json`: `/plugin` installed at project scope adds an `enabledPlugins` entry there. Committed, that entry turns the plugin on in every deployment and for anyone who clones the repo. Before committing, check `git diff .claude/settings.json` and move per-user entries to `.claude/settings.local.json`.
+
 ## Code conventions
 
 - Node ≥ 22, `.mjs` ES modules, only `node:` built-ins (no npm dependencies).
