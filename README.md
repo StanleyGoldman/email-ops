@@ -70,7 +70,7 @@ These are guardrails against mistakes and prompt injection, not a sandbox agains
 
 This follows the same model as career-ops: the git checkout *is* the install, and personal files are gitignored inside it.
 
-- **Dev repo, `~/Documents/code/email-ops`:** change code here, run `npm test`, then release with a tag: `git tag v0.2.0`.
+- **Dev repo, `~/Documents/code/email-ops`:** change code on a branch, run `npm test`, and open a pull request: `main` on GitHub accepts changes only through PRs. Once it merges, release with a tag on `main`: `git tag v0.2.0 && git push origin v0.2.0`.
   - Create the marker once: `touch .claude/dev-mode`. It is gitignored, so only this checkout has it.
   - Without it, Claude is as restricted here as in a deployment (no direct `himalaya`, no web). `npm run doctor` fails if the marker ever appears in a deployment.
 - **Deployment, `~/Documents/email-ops`:** a clone detached at a release tag. This is where you manage mail.
