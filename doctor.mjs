@@ -5,7 +5,10 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { configPath, himalaya, himalayaVersion, listAccounts, listMailboxes } from './lib/himalaya.mjs';
+import { join } from 'node:path';
 import { PROFILE, ROOT } from './lib/paths.mjs';
+
+const DEV_MODE = join(ROOT, '.claude', 'dev-mode');
 
 let failures = 0;
 const ok = (msg) => console.log(`  ✓ ${msg}`);
@@ -14,7 +17,8 @@ let secretHintShown = false;
 const bad = (msg) => {
   failures++;
   console.log(`  ✗ ${msg}`);
-  if (/Spawn secret command/.test(msg) && !secretHintShown) {
+  // "Spawn ..." when secret-tool is missing, "Secret command error" when the keyring has no entry.
+  if (/Spawn secret command|Secret command error/.test(msg) && !secretHintShown) {
     secretHintShown = true;
     console.log('      the password lookup failed: is secret-tool installed (sudo apt install libsecret-tools),');
     console.log('      and was the password stored with: secret-tool store ... service email-ops account <name>?');
@@ -73,12 +77,19 @@ if (version && configText !== null) {
       continue;
     }
     try {
-      const roles = new Map((await listMailboxes(name)).filter((m) => m.role).map((m) => [m.role, m.name]));
+      const mailboxes = await listMailboxes(name);
+      const roles = new Map(mailboxes.filter((m) => m.role).map((m) => [m.role, m.name]));
+      let missing = false;
       for (const role of ['inbox', 'archive', 'trash', 'drafts']) {
-        roles.has(role)
-          ? ok(`${name}: ${role} → ${roles.get(role)}`)
-          : bad(`${name}: no ${role} folder; set mailbox.alias.${role} in the config (himalaya mailbox list shows the names)`);
+        if (roles.has(role)) {
+          ok(`${name}: ${role} → ${roles.get(role)}`);
+        } else {
+          missing = true;
+          bad(`${name}: no ${role} folder; set mailbox.alias.${role} in the config to one of the names below`);
+        }
       }
+      // The agent can't run `himalaya mailbox list` itself, so show the names here.
+      if (missing) console.log(`      ${name} folders: ${mailboxes.map((m) => JSON.stringify(m.name)).join(', ')}`);
     } catch (err) {
       bad(`${name}: ${err.message}`);
     }
@@ -95,6 +106,13 @@ try {
   const where = git('describe', '--tags', '--always', '--dirty');
   const branch = git('rev-parse', '--abbrev-ref', 'HEAD');
   ok(branch === 'HEAD' ? `deployment at ${where}` : `dev checkout on ${branch} (${where})`);
+  if (existsSync(DEV_MODE)) {
+    branch === 'HEAD'
+      ? bad('.claude/dev-mode exists in a deployment: it switches the guard hook to relaxed rules; delete it')
+      : warn('.claude/dev-mode present: the guard allows direct himalaya and web access in this checkout');
+  } else {
+    ok('guard hook is strict');
+  }
   const modified = git('status', '--porcelain', '--untracked-files=no');
   if (modified && branch === 'HEAD') warn(`tracked files edited in a deployment (npm run update will refuse):\n${modified}`);
 } catch {

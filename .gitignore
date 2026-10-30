@@ -14,6 +14,10 @@ modes/_profile.md
 # Claude Code per-user settings
 .claude/settings.local.json
 
+# Marks a development checkout, where the guard hook relaxes its rules.
+# A deployment must never have it.
+.claude/dev-mode
+
 # Never commit raw mail or secrets
 *.eml
 .env

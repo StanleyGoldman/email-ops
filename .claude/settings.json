@@ -3,20 +3,12 @@
     "ask": [
       "Bash(node act.mjs --confirm:*)",
       "Bash(node ./act.mjs --confirm:*)"
-    ],
-    "deny": [
-      "Bash(himalaya:*)",
-      "Bash(secret-tool:*)",
-      "Bash(curl:*)",
-      "Bash(wget:*)",
-      "WebFetch",
-      "WebSearch"
     ]
   },
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Bash",
+        "matcher": "Bash|WebFetch|WebSearch|Write|Edit|MultiEdit|NotebookEdit",
         "hooks": [
           {
             "type": "command",

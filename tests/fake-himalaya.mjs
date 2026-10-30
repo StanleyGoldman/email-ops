@@ -82,7 +82,7 @@ switch (`${noun} ${verb}`) {
     out({ accounts: Object.keys(state.accounts).map((name, i) => ({ name, default: i === 0, backends: ['imap'] })) });
     break;
   case 'account check':
-    out({ account, backends: [{ backend: 'imap', ok: true, error: null }] });
+    out({ account, backends: [{ backend: 'imap', ok: !a.checkError, error: a.checkError ?? null }] });
     break;
   case 'mailbox list':
     out({ mailboxes: a.mailboxes.map((m) => ({ id: m.name, name: m.name, role: m.role ?? null })) });

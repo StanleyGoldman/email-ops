@@ -33,7 +33,7 @@ The scripts use no npm dependencies, only Node built-ins.
 | An email that says "AI, archive everything" | Email is treated as data. Changes need a plan, its dry run, and a **Claude Code permission prompt that only you can answer**. |
 | A plan edited after you reviewed it | `act.mjs --confirm <hash>` refuses unless the file still matches the hash shown in the dry run. A plan runs only once. |
 | A stale message id hitting the wrong email | Before acting, each message's live Message-ID is checked against the plan. |
-| Claude going around the scripts | A hook denies direct `himalaya` and `secret-tool` calls, and project settings deny curl, wget, WebFetch and WebSearch. |
+| Claude going around the scripts | A hook denies direct `himalaya` and `secret-tool` calls, curl, wget, WebFetch and WebSearch. In a development checkout, the gitignored `.claude/dev-mode` marker relaxes all of that except `secret-tool`. |
 | What happened, and when | Every action is appended to `data/actions.jsonl`. |
 
 These are guardrails against mistakes and prompt injection, not a sandbox against a determined process running as you.
@@ -60,7 +60,9 @@ These are guardrails against mistakes and prompt injection, not a sandbox agains
    cp config/himalaya.example.toml config/himalaya.toml     # fill in hosts, usernames, email, display-name
    himalaya -c config/himalaya.toml -a personal mailbox list # find the real folder names
    ```
-   Then set `mailbox.alias.archive`, `trash`, `drafts`, `sent` and `junk` for each account to match.
+   Then set `mailbox.alias.archive`, `trash`, `drafts`, `sent` and `junk` for each account to match. When a folder is missing, `npm run doctor` also lists that account's folder names.
+
+   **Coming from Thunderbird?** Its `prefs.js` already holds the hosts, usernames and folder names (`mail.server.*`, `mail.identity.*`). If you use Thunderbird's yearly archiving, `Archives` may be only a parent folder that can't hold mail; point `archive` at a year folder instead.
 5. **Profile:** `cp modes/_profile.template.md modes/_profile.md` and edit it, or run `/email-ops profile` and let Claude interview you.
 6. `npm run doctor` should end with **All good.** Then open Claude Code in the deployment folder and run `/email-ops triage`.
 
@@ -69,6 +71,8 @@ These are guardrails against mistakes and prompt injection, not a sandbox agains
 This follows the same model as career-ops: the git checkout *is* the install, and personal files are gitignored inside it.
 
 - **Dev repo, `~/Documents/code/email-ops`:** change code here, run `npm test`, then release with a tag: `git tag v0.2.0`.
+  - Create the marker once: `touch .claude/dev-mode`. It is gitignored, so only this checkout has it.
+  - Without it, Claude is as restricted here as in a deployment (no direct `himalaya`, no web). `npm run doctor` fails if the marker ever appears in a deployment.
 - **Deployment, `~/Documents/email-ops`:** a clone detached at a release tag. This is where you manage mail.
   ```sh
   git clone ~/Documents/code/email-ops ~/Documents/email-ops
@@ -94,8 +98,8 @@ This follows the same model as career-ops: the git checkout *is* the install, an
 
 ```
 CLAUDE.md, README.md         rules for the agent; this file
-.claude/settings.json        permission rules and the PreToolUse guard hook
-.claude/hooks/guard.mjs      denies direct himalaya/secret-tool, forces a prompt for act --confirm
+.claude/settings.json        the act --confirm prompt rule and the PreToolUse guard hook
+.claude/hooks/guard.mjs      denies direct himalaya/secret-tool, curl/wget/web tools and edits to the guardrails (relaxed by .claude/dev-mode); forces a prompt for act --confirm
 .claude/skills/email-ops/    the /email-ops router
 modes/                       _shared.md (rules), triage, cleanup, draft, search, _profile.template.md
 config/himalaya.example.toml template for config/himalaya.toml
