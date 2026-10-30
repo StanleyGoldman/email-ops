@@ -18,6 +18,9 @@ modes/_profile.md
 # A deployment must never have it.
 .claude/dev-mode
 
+# Agent worktrees for branch work in the dev repo
+/.claude/worktrees/
+
 # Never commit raw mail or secrets
 *.eml
 .env
